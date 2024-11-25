@@ -9,6 +9,7 @@
 
 #define PROMPT "fjshell> "
 #define ERROR_MESSAGE "An error has ocurred"
+#define MAX_ARGS 10
 
 void print_err() 
 {
@@ -33,6 +34,21 @@ char *getpath(char *program, char *envpath)
     return ppath;
 }
 
+char **getcommand(char *source)
+{
+    char **args = malloc(MAX_ARGS * sizeof(char*));
+    int i = 0;
+    args[i++] = strsep(&source, " ");
+
+    for (;source != NULL && i < MAX_ARGS; i++) {
+        char *arg = strsep(&source, " ");
+        args[i] = arg;
+    }
+
+    args[i] = NULL;
+    return args;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -52,17 +68,16 @@ main(int argc, char **argv)
             line[nread - 1] = '\0';
         }
 
-        char *command = strsep(&line, " ");
-
         pid_t pid;
 
         if ((pid = fork()) < 0) {
             print_err();
         } else if (pid == 0) {
-            char *args[] = { command, NULL };
+            char **args = getcommand(line);
             char *path = getpath(args[0], envpath);
 
             if (path == NULL || execv(path, args) == -1) {
+                free(args);
                 print_err();
             }
 
