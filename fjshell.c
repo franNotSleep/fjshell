@@ -116,8 +116,7 @@ void execbic(enum BUILT_IN_COMMAND biccommand, char **args, char **envpath)
             exit(0);
             break;
         case BIC_PATH:
-            char *newpath = argsconcat(' ', ++args); 
-            *envpath = newpath;
+            *envpath = argsconcat(' ', ++args); 
             break;
         case BIC_CD:
             if (chdir(args[1]) == -1) {
