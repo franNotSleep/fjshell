@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -17,9 +18,26 @@ enum BUILT_IN_COMMAND { BIC_UNRECOGNIZED, BIC_EXIT, BIC_CD, BIC_PATH };
 
 char cwd[PATH_MAX];
 
-void print_err() 
+void 
+print_err() 
 {
     perror(ERROR_MESSAGE);
+}
+
+ssize_t redirect(char **args)
+{
+    ssize_t i;
+    for (i = 0; args[i] != NULL; i++) {
+        if (strcmp(args[i], ">") == 0) {
+            if (args[++i] != NULL) {
+                return i;
+            }
+
+            return -2;
+        }
+    }
+
+    return -1;
 }
 
 char *replace(char x, char *source)
@@ -173,6 +191,26 @@ main(int argc, char **argv)
             print_err();
         } else if (pid == 0) {
             char *path = getpath(args[0], envpath);
+            ssize_t rpathname = redirect(args);
+
+            if (rpathname == -2) {
+                print_err();
+                continue;
+            }
+
+            if (rpathname != -1) {
+                if (close(STDOUT_FILENO) == -1) {
+                    print_err();
+                    continue;
+                }
+
+                if (open(args[rpathname], O_CREAT | O_WRONLY, S_IRWXU) == -1) {
+                    print_err();
+                    continue;
+                }
+
+                args[rpathname - 1] = NULL;
+            }
 
             if (path == NULL || execv(path, args) == -1) {
                 free(args);
