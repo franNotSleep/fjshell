@@ -1,4 +1,4 @@
-# fjshell
+fjshell
 
 ## How to use?
 
@@ -7,6 +7,9 @@ git clone https://github.com/franNotSleep/fjshell
 cd fjshell
 make
 ./fjshell
+
+## IN FJSHELL
 wc -l ./fjshell.c > linescount.txt
+cat linescount.txt
 ```
 
